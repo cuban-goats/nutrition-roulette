@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nutrition_roulette/data/database.dart';
 import 'package:nutrition_roulette/models/food.dart';
 import 'package:nutrition_roulette/screens/main_shell.dart';
+import 'package:nutrition_roulette/settings/settings_controller.dart';
 
 class FakeFoodDatabase extends FoodDatabase {
   final List<Food> foods = [
@@ -15,9 +16,16 @@ class FakeFoodDatabase extends FoodDatabase {
   Future<List<Food>> getFoods() async => List.of(foods);
 
   @override
-  Future<int> addFood(String name) async {
-    foods.add(Food(id: foods.length + 1, name: name));
+  Future<int> addFood(String name, {String? description}) async {
+    foods.add(Food(id: foods.length + 1, name: name, description: description));
     return foods.length;
+  }
+
+  @override
+  Future<int> updateFood(Food food) async {
+    final index = foods.indexWhere((f) => f.id == food.id);
+    if (index >= 0) foods[index] = food;
+    return 1;
   }
 
   @override
@@ -53,7 +61,7 @@ void main() {
     final db = FakeFoodDatabase();
 
     await tester.pumpWidget(
-      MaterialApp(home: MainShell(database: db)),
+      MaterialApp(home: MainShell(database: db, settings: SettingsController())),
     );
     await tester.pumpAndSettle();
 
@@ -63,14 +71,51 @@ void main() {
     expect(result, isNotNull, reason: 'pressing the button should show a food');
 
     await goToTab(tester, 'Manage');
-    expect(find.byType(TextField), findsOneWidget,
-        reason: 'manage tab should show the add field');
+    expect(find.widgetWithText(FilledButton, 'Add food'), findsOneWidget,
+        reason: 'manage tab should show the add food button');
 
-    await tester.enterText(find.byType(TextField), 'Tacos');
-    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Add food'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNWidgets(2),
+        reason: 'add food page should have name and description fields');
+
+    await tester.enterText(find.byType(TextField).at(0), 'Tacos');
+    await tester.enterText(find.byType(TextField).at(1), 'Tasty tacos');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
     expect(find.text('Tacos'), findsOneWidget,
-        reason: 'Tacos should appear in the list after Add');
+        reason: 'Tacos should appear in the list after Save');
+    expect(find.text('Tasty tacos'), findsOneWidget,
+        reason: 'description should appear in the list after Save');
+
+    final tacosTile = find.ancestor(
+      of: find.text('Tacos'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(find.descendant(
+      of: tacosTile,
+      matching: find.byIcon(Icons.edit),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit Food'), findsOneWidget,
+        reason: 'edit page should be shown');
+    expect(find.text('Tacos'), findsOneWidget,
+        reason: 'name should be prefilled');
+
+    await tester.enterText(find.byType(TextField).at(1), 'Crunchy tacos');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Crunchy tacos'), findsOneWidget,
+        reason: 'updated description should appear in the list');
+    expect(find.text('Tasty tacos'), findsNothing,
+        reason: 'old description should be gone');
+    expect(
+      db.foods.any(
+        (f) => f.name == 'Tacos' && f.description == 'Crunchy tacos',
+      ),
+      isTrue,
+      reason: 'database should reflect the update',
+    );
 
     await goToTab(tester, 'Home');
     result = await pick(tester, ['Pizza', 'Sushi', 'Tacos']);

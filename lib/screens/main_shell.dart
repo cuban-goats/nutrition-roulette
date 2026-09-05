@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../data/database.dart';
+import '../settings/settings_controller.dart';
 import '../widgets/gradient_background.dart';
 import 'home_screen.dart';
 import 'manage_foods_screen.dart';
-import 'more_screen.dart';
+import 'settings_screen.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key, this.database});
+  const MainShell({super.key, this.database, required this.settings});
 
   final FoodDatabase? database;
+  final SettingsController settings;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -66,16 +68,40 @@ class _MainShellState extends State<MainShell> {
           children: [
             HomeScreen(key: _homeKey, database: _database),
             ManageFoodsScreen(database: _database),
-            const MoreScreen(),
+            SettingsScreen(settings: widget.settings),
           ],
         ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _select,
-          destinations: [
-            for (final tab in _tabs)
-              NavigationDestination(icon: Icon(tab.icon), label: tab.label),
-          ],
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          child: Material(
+            color: Color.alphaBlend(
+              Theme.of(context)
+                  .colorScheme
+                  .surfaceContainer
+                  .withValues(alpha: 0.82),
+              Colors.transparent,
+            ),
+            elevation: 4,
+            shadowColor: Colors.black.withValues(alpha: 0.35),
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: _select,
+              height: 68,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              backgroundColor: Colors.transparent,
+              indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
+              destinations: [
+                for (final tab in _tabs)
+                  NavigationDestination(icon: Icon(tab.icon), label: tab.label),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -106,8 +132,8 @@ const _tabs = <_TabData>[
     icon: Icons.edit,
   ),
   _TabData(
-    title: 'More',
-    label: 'More',
-    icon: Icons.more_horiz,
+    title: 'Settings',
+    label: 'Settings',
+    icon: Icons.settings,
   ),
 ];

@@ -6,9 +6,9 @@ Let fate decide what you eat. Add your favorite foods and spin for a random pick
 
 - **Pick a food** - Tap the button on the Home tab and get a random food from your list.
 - **Manage foods** - Add and remove foods in the Manage tab, stored locally on the device.
-- **More** - A placeholder tab reserved for future features.
+- **Settings** - Switch between light, dark, and system theme, and choose from several color themes.
 - **Swipe navigation** - Switch between tabs from the bottom bar or by swiping left/right.
-- **Dark theme** - Material 3 design with a green color scheme, the Poppins font, and a subtle gradient background.
+- **Material 3 design** - Poppins font and a subtle gradient background in your chosen theme.
 
 ## Tech stack
 
@@ -48,14 +48,15 @@ The signed APK is written to `build/app/outputs/flutter-apk/app-debug.apk`.
 
 ```
 lib/
-  main.dart                         App entry point and theme
+  main.dart                         App entry point, theme and settings root
+  settings/settings_controller.dart Theme mode + color theme state
   data/database.dart                SQLite persistence layer
   models/food.dart                  Food model
   screens/
     main_shell.dart                 Bottom navigation shell + swipeable tabs
     home_screen.dart                Random pick screen
     manage_foods_screen.dart        Add / remove foods
-    more_screen.dart                Placeholder tab
+    settings_screen.dart            Theme and appearance settings
   widgets/
     gradient_background.dart        App background
 ```

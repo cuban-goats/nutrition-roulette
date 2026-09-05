@@ -1,30 +1,47 @@
 import 'package:flutter/material.dart';
 
 import 'screens/main_shell.dart';
+import 'settings/settings_controller.dart';
 
 void main() {
-  runApp(const FoodPickerApp());
+  runApp(const NutritionRouletteApp());
 }
 
-const _seed = Color(0xFF4CAF50);
+class NutritionRouletteApp extends StatefulWidget {
+  const NutritionRouletteApp({super.key});
 
-class FoodPickerApp extends StatelessWidget {
-  const FoodPickerApp({super.key});
+  @override
+  State<NutritionRouletteApp> createState() => _NutritionRouletteAppState();
+}
+
+class _NutritionRouletteAppState extends State<NutritionRouletteApp> {
+  final SettingsController _settings = SettingsController();
+
+  @override
+  void dispose() {
+    _settings.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Nutrition Roulette',
-      theme: _theme(Brightness.light),
-      darkTheme: _theme(Brightness.dark),
-      themeMode: ThemeMode.dark,
-      home: const MainShell(),
+    return ListenableBuilder(
+      listenable: _settings,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Nutrition Roulette',
+          theme: _theme(Brightness.light, _settings.seedColor),
+          darkTheme: _theme(Brightness.dark, _settings.seedColor),
+          themeMode: _settings.themeMode,
+          home: MainShell(settings: _settings),
+        );
+      },
     );
   }
 
-  ThemeData _theme(Brightness brightness) {
+  ThemeData _theme(Brightness brightness, Color seed) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: _seed,
+      seedColor: seed,
       brightness: brightness,
       dynamicSchemeVariant: DynamicSchemeVariant.tonalSpot,
     );
