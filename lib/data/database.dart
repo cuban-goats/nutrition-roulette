@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/food.dart';
 
 class FoodDatabase {
-  static const _databaseName = 'food_picker.db';
+  static const _databaseName = 'nutrition_roulette.db';
   static const _table = 'foods';
   static const _seedFoods = ['Pizza', 'Sushi', 'Burger', 'Pasta', 'Salad'];
 

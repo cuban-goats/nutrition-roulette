@@ -1,4 +1,4 @@
-package com.example.food_picker
+package com.example.nutrition_roulette
 
 import io.flutter.embedding.android.FlutterActivity
 

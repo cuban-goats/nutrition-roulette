@@ -1,4 +1,4 @@
-# food_picker
+# Nutrition Roulette
 
 A new Flutter project.
 

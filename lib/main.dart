@@ -14,7 +14,7 @@ class FoodPickerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Food Picker',
+      title: 'Nutrition Roulette',
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
       themeMode: ThemeMode.dark,

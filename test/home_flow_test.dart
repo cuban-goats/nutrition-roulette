@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:food_picker/data/database.dart';
-import 'package:food_picker/models/food.dart';
-import 'package:food_picker/screens/main_shell.dart';
+import 'package:nutrition_roulette/data/database.dart';
+import 'package:nutrition_roulette/models/food.dart';
+import 'package:nutrition_roulette/screens/main_shell.dart';
 
 class FakeFoodDatabase extends FoodDatabase {
   final List<Food> foods = [

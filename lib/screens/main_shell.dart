@@ -96,7 +96,7 @@ class _TabData {
 
 const _tabs = <_TabData>[
   _TabData(
-    title: 'Food Picker',
+    title: 'Nutrition Roulette',
     label: 'Home',
     icon: Icons.restaurant,
   ),
