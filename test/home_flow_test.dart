@@ -126,7 +126,14 @@ void main() {
     await goToTab(tester, 'Manage');
     await tester.tap(find.byIcon(Icons.delete_outline).first);
     await tester.pumpAndSettle();
+    expect(find.text('Deleted Pizza'), findsOneWidget,
+        reason: 'delete snackbar should confirm the removal');
     expect(db.foods.length, beforeDelete - 1);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(db.foods.length, beforeDelete,
+        reason: 'undo should restore the deleted food');
 
     await goToTab(tester, 'Home');
     result = await pick(tester, db.foods.map((f) => f.name).toList());

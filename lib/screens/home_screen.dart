@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/database.dart';
 import '../models/food.dart';
@@ -15,14 +17,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  static const _cycleInterval = Duration(milliseconds: 70);
+  static const _cycleDuration = Duration(milliseconds: 800);
+
   late final FoodDatabase _database = widget.database ?? FoodDatabase();
   List<Food>? _foods;
   String? _result;
+  bool _picking = false;
+  Timer? _cycleTimer;
 
   @override
   void initState() {
     super.initState();
     _loadFoods();
+  }
+
+  @override
+  void dispose() {
+    _cycleTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadFoods() async {
@@ -36,9 +49,25 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _pickRandom() {
     final foods = _foods;
-    if (foods == null || foods.isEmpty) return;
+    if (foods == null || foods.isEmpty || _picking) return;
+    final names = foods.map((f) => f.name).toList();
+    _cycleTimer?.cancel();
     setState(() {
-      _result = foods[math.Random().nextInt(foods.length)].name;
+      _picking = true;
+      _result = names[math.Random().nextInt(names.length)];
+    });
+    final start = DateTime.now();
+    _cycleTimer = Timer.periodic(_cycleInterval, (timer) {
+      if (!mounted) return;
+      final done = DateTime.now().difference(start) >= _cycleDuration;
+      setState(() {
+        if (done) _picking = false;
+        _result = names[math.Random().nextInt(names.length)];
+      });
+      if (done) {
+        timer.cancel();
+        HapticFeedback.mediumImpact();
+      }
     });
   }
 
@@ -131,6 +160,7 @@ class HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 40),
             _PickButton(
               onPressed: empty ? null : _pickRandom,
+              busy: _picking,
             ),
             const SizedBox(height: 24),
             if (empty)
@@ -148,52 +178,90 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _PickButton extends StatelessWidget {
-  const _PickButton({this.onPressed});
+class _PickButton extends StatefulWidget {
+  const _PickButton({this.onPressed, required this.busy});
 
   final VoidCallback? onPressed;
+  final bool busy;
+
+  @override
+  State<_PickButton> createState() => _PickButtonState();
+}
+
+class _PickButtonState extends State<_PickButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  );
+
+  @override
+  void didUpdateWidget(covariant _PickButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.busy && !oldWidget.busy) {
+      _spin.repeat();
+    } else if (!widget.busy && _spin.isAnimating) {
+      _spin.stop();
+      _spin.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final enabled = onPressed != null;
+    final enabled = widget.onPressed != null;
+    final active = enabled || widget.busy;
     final borderShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(32),
     );
     final foreground =
-        enabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant;
-    return Material(
-      color: enabled
-          ? colorScheme.primary
-          : colorScheme.surfaceContainerHighest,
-      shape: borderShape,
-      clipBehavior: Clip.antiAlias,
-      elevation: enabled ? 4 : 0,
-      shadowColor: colorScheme.primary.withValues(alpha: 0.35),
-      child: InkWell(
-        onTap: onPressed,
-        child: SizedBox(
-          width: 240,
-          height: 68,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.shuffle, size: 26, color: foreground),
-              const SizedBox(width: 10),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'Pick a food!',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      color: foreground,
+        active ? colorScheme.onPrimary : colorScheme.onSurfaceVariant;
+    return AnimatedScale(
+      scale: widget.busy ? 0.96 : 1.0,
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeInOut,
+      child: Material(
+        color: active
+            ? colorScheme.primary
+            : colorScheme.surfaceContainerHighest,
+        shape: borderShape,
+        clipBehavior: Clip.antiAlias,
+        elevation: active ? 4 : 0,
+        shadowColor: colorScheme.primary.withValues(alpha: 0.35),
+        child: InkWell(
+          onTap: enabled ? widget.onPressed : null,
+          child: SizedBox(
+            width: 240,
+            height: 68,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RotationTransition(
+                  turns: _spin,
+                  child: Icon(Icons.shuffle, size: 26, color: foreground),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Pick a food!',
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: foreground,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

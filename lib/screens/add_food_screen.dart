@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../data/database.dart';
 import '../models/food.dart';
 import '../widgets/gradient_background.dart';
 
 class AddFoodScreen extends StatefulWidget {
-  const AddFoodScreen({super.key, required this.database, this.food});
+  const AddFoodScreen({super.key, this.food});
 
-  final FoodDatabase database;
   final Food? food;
 
   @override
@@ -38,21 +36,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  void _save() {
     final name = _nameController.text.trim();
     if (name.isEmpty || _saving) return;
     setState(() => _saving = true);
     final description = _descriptionController.text.trim();
-    final cleanDescription = description.isEmpty ? null : description;
-    if (_editing) {
-      await widget.database.updateFood(
-        Food(id: widget.food!.id, name: name, description: cleanDescription),
-      );
-    } else {
-      await widget.database.addFood(name, description: cleanDescription);
-    }
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop((name, description));
   }
 
   @override
